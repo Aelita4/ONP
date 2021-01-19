@@ -219,6 +219,7 @@ std::string stringToONP(std::string s, int speed = 500)
 	char heap[100] {};
 	for (int i = 0; i < 100; i++) heap[i] = '\0';
 	int counter = 0;
+    char prev = '\0';
 
 	for (int i = 0; i < len; i++)
 	{
@@ -275,10 +276,14 @@ std::string stringToONP(std::string s, int speed = 500)
 		case '*':
 		case '/':
             numBuildCount = 1;
-            out += std::to_string(numBuild);
-            numBuild = 0;
-            out += ";";
-            displayNumBuilder(0);
+            if(prev == ')') prev = '\0';
+            else {
+                out += std::to_string(numBuild);
+
+                numBuild = 0;
+                out += ";";
+                displayNumBuilder(0);
+            }
 
 			while (counter)
 			{
@@ -321,7 +326,40 @@ std::string stringToONP(std::string s, int speed = 500)
             color(WHITE, BLACK);
 			break;
 		case ')':
-			
+            prev = ')';
+			            numBuildCount = 1;
+            out += std::to_string(numBuild);
+            numBuild = 0;
+            out += ";";
+            displayNumBuilder(0);
+
+			while (counter)
+			{
+                if(heap[counter - 1] == '(') break;
+				if (priority(tmp) > priority(heap[counter - 1])) break;
+				out += heap[--counter];
+                heapPointer(counter);
+				heap[counter] = '\0';
+				/*gotoxy(3 + (2 * counter), 2);
+				color(RED, BLACK);
+				std::cout << " ";
+				color(WHITE, BLACK);*/
+                gotoxy(2, 3 + counter);
+                color(YELLOW, LIGHT_PURPLE);
+                if(counter != 0) std::cout << " ";
+                color(WHITE, BLACK);
+			}
+			heap[counter] = tmp;
+			/*gotoxy(3 + (2 * counter), 2);
+			color(RED, BLACK);
+			std::cout << tmp;
+			color(WHITE, BLACK);*/
+            heapPointer(counter + 1);
+            gotoxy(2, 4 + counter);
+            color(YELLOW, LIGHT_PURPLE);
+            std::cout << tmp;
+			counter++;
+            color(WHITE, BLACK);
 			for (; heap[counter] != '('; counter--)
 			{
                 heapPointer(counter);
@@ -370,6 +408,7 @@ int calculateONP(std::string s, int speed = 500)
 	int counter = 0;
 	int calculate = 0;
     int digit = 0;
+    char prev = '\0';
 
 	int heap[100]{};
 	for (int i = 0; i < 100; i++) heap[i] = 0;
