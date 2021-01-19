@@ -130,8 +130,8 @@ bool checkChar(char c, int type)
 
 void heapPointer(int y)
 {
-    gotoxy(0, 0);
-    std::cout << y;
+    /*gotoxy(0, 0);
+    std::cout << y;*/
     char t = '\0';
     
     if(y > 0)
@@ -185,16 +185,41 @@ void heapPointer(int y)
     for(int i = 0; i <= 10; i++) std::cout << " ";
 }
 
+void displayNumBuilder(int n)
+{
+    int len;
+    int i = n;
+
+    for(len = 0; i > 0; len++)
+    {
+        i /= 10;
+    }
+
+    //std::cout << 10 - len;
+
+    gotoxy(2, 2);
+    color(RED, BLACK);
+    std::cout << n;
+    for(int j = 0; j < (10 - len); j++)
+    {
+        std::cout << " ";
+    } 
+    color(WHITE, BLACK);
+}
+
 std::string stringToONP(std::string s, int speed = 500)
 {
     heapPointer(0);
 	std::string out = "";
 	int len = s.length();
+    int numBuild = 0;
+    int numBuildCount = 1;
 	char tmp;
 
 	char heap[100] {};
 	for (int i = 0; i < 100; i++) heap[i] = '\0';
 	int counter = 0;
+    char prev = '\0';
 
 	for (int i = 0; i < len; i++)
 	{
@@ -205,6 +230,11 @@ std::string stringToONP(std::string s, int speed = 500)
 		switch (tmp)
 		{
 		case '=':
+            numBuildCount = 1;
+            out += std::to_string(numBuild);
+            numBuild = 0;
+            out += ";";
+            displayNumBuilder(0);
 			for (; counter > 0; counter--)
 			{
 				out += heap[counter - 1];
@@ -236,12 +266,25 @@ std::string stringToONP(std::string s, int speed = 500)
 		case '7':
 		case '8':
 		case '9':
-			out += tmp;
+            numBuild += (numBuildCount * (tmp - '0'));
+            numBuildCount *= 10;
+            displayNumBuilder(numBuild);
+			//out += tmp;
 			break;
 		case '+':
 		case '-':
 		case '*':
 		case '/':
+            numBuildCount = 1;
+            if(prev == ')') prev = '\0';
+            else {
+                out += std::to_string(numBuild);
+
+                numBuild = 0;
+                out += ";";
+                displayNumBuilder(0);
+            }
+
 			while (counter)
 			{
 				if (priority(tmp) > priority(heap[counter - 1])) break;
@@ -283,7 +326,40 @@ std::string stringToONP(std::string s, int speed = 500)
             color(WHITE, BLACK);
 			break;
 		case ')':
-			
+            prev = ')';
+			            numBuildCount = 1;
+            out += std::to_string(numBuild);
+            numBuild = 0;
+            out += ";";
+            displayNumBuilder(0);
+
+			while (counter)
+			{
+                if(heap[counter - 1] == '(') break;
+				if (priority(tmp) > priority(heap[counter - 1])) break;
+				out += heap[--counter];
+                heapPointer(counter);
+				heap[counter] = '\0';
+				/*gotoxy(3 + (2 * counter), 2);
+				color(RED, BLACK);
+				std::cout << " ";
+				color(WHITE, BLACK);*/
+                gotoxy(2, 3 + counter);
+                color(YELLOW, LIGHT_PURPLE);
+                if(counter != 0) std::cout << " ";
+                color(WHITE, BLACK);
+			}
+			heap[counter] = tmp;
+			/*gotoxy(3 + (2 * counter), 2);
+			color(RED, BLACK);
+			std::cout << tmp;
+			color(WHITE, BLACK);*/
+            heapPointer(counter + 1);
+            gotoxy(2, 4 + counter);
+            color(YELLOW, LIGHT_PURPLE);
+            std::cout << tmp;
+			counter++;
+            color(WHITE, BLACK);
 			for (; heap[counter] != '('; counter--)
 			{
                 heapPointer(counter);
@@ -325,10 +401,14 @@ int calculateONP(std::string s, int speed = 500)
 {
     heapPointer(0);
 	int out = 0;
+    int numBuild = 0;
+    int numBuildCount = 1;
 	int len = s.length();
 	char tmp;
 	int counter = 0;
 	int calculate = 0;
+    int digit = 0;
+    char prev = '\0';
 
 	int heap[100]{};
 	for (int i = 0; i < 100; i++) heap[i] = 0;
@@ -336,11 +416,39 @@ int calculateONP(std::string s, int speed = 500)
 	for (int i = 0; i < len; i++)
 	{
 		//gotoxy(1 + i, 8);
+        color(LIGHT_GREEN, BLACK);
 		gotoxy(41 + i, 4);
         std::cout << " ^";
 		tmp = s.c_str()[i];
 		switch (tmp)
 		{
+        case ';':
+            heap[counter] = numBuild;
+			//gotoxy(3 + (2 * counter), 2);
+
+            gotoxy(42 + i, 3);
+            color(LIGHT_GREEN, BLACK);
+            //std::cout << numBuild;
+            gotoxy(41 + i, 4);
+            std::cout << " ^";
+			color(WHITE, BLACK);
+			counter++;
+            heapPointer(counter);
+
+            gotoxy(2, 3 + counter);
+            color(YELLOW, BLACK);
+			std::cout << numBuild;
+
+            numBuildCount = 1;
+            numBuild = 0;
+            displayNumBuilder(0);
+            gotoxy(42 + i, 3);
+            color(LIGHT_GREEN, BLACK);
+            std::cout << tmp;
+            gotoxy(41 + i, 4);
+            std::cout << " ^";
+			color(WHITE, BLACK);
+            break;
 		case '0':
 		case '1':
 		case '2':
@@ -351,7 +459,16 @@ int calculateONP(std::string s, int speed = 500)
 		case '7':
 		case '8':
 		case '9':
-			heap[counter] = tmp - '0';
+            numBuild += (numBuildCount * (tmp - '0'));
+            numBuildCount *= 10;
+            displayNumBuilder(numBuild);
+            gotoxy(42 + i, 3);
+            color(LIGHT_GREEN, BLACK);
+            std::cout << tmp;
+            gotoxy(41 + i, 4);
+            std::cout << " ^";
+			color(WHITE, BLACK);
+			/*heap[counter] = tmp - '0';
 			//gotoxy(3 + (2 * counter), 2);
             gotoxy(2, 4 + counter);
             color(YELLOW, LIGHT_PURPLE);
@@ -363,7 +480,7 @@ int calculateONP(std::string s, int speed = 500)
             std::cout << " ^";
 			color(WHITE, BLACK);
 			counter++;
-            heapPointer(counter);
+            heapPointer(counter);*/
 			break;
 		case '+':
 			calculate = heap[counter - 2] + heap[counter - 1];
@@ -372,7 +489,7 @@ int calculateONP(std::string s, int speed = 500)
             //(((2+2)+2)+2)+2=
 			//gotoxy(3 + (2 * (counter - 2)), 2);
 			gotoxy(2, 4 + counter - 2);
-            color(YELLOW, LIGHT_PURPLE);
+            color(YELLOW, BLACK);
 			std::cout << "  ";
 			//gotoxy(3 + (2 * (counter - 1)), 2);
 			gotoxy(2, 4 + counter - 1);
@@ -381,7 +498,7 @@ int calculateONP(std::string s, int speed = 500)
             heapPointer(counter);
 			heap[counter++] = calculate;
             heapPointer(counter);
-            color(YELLOW, LIGHT_PURPLE);
+            color(YELLOW, BLACK);
 			//gotoxy(3 + (2 * (counter - 1)), 2);
 			gotoxy(2, 4 + counter - 1);
             std::cout << calculate;
@@ -393,7 +510,7 @@ int calculateONP(std::string s, int speed = 500)
 			color(WHITE, BLACK);
 			break;
 		case '-':
-			calculate = heap[counter - 2] - heap[counter - 1];
+			/*calculate = heap[counter - 2] - heap[counter - 1];
 			heap[counter - 2] = 0;
 			heap[counter - 1] = 0;
 			//gotoxy(3 + (2 * (counter - 2)), 2);
@@ -416,10 +533,35 @@ int calculateONP(std::string s, int speed = 500)
             std::cout << tmp;
             gotoxy(41 + i, 4);
             std::cout << " ^";
+			color(WHITE, BLACK);*/
+            calculate = heap[counter - 2] - heap[counter - 1];
+			heap[counter - 2] = 0;
+			heap[counter - 1] = 0;
+            //(((2+2)+2)+2)+2=
+			//gotoxy(3 + (2 * (counter - 2)), 2);
+			gotoxy(2, 4 + counter - 2);
+            color(YELLOW, BLACK);
+			std::cout << "  ";
+			//gotoxy(3 + (2 * (counter - 1)), 2);
+			gotoxy(2, 4 + counter - 1);
+            std::cout << "  ";
+			counter -= 2;
+            heapPointer(counter);
+			heap[counter++] = calculate;
+            heapPointer(counter);
+            color(YELLOW, BLACK);
+			//gotoxy(3 + (2 * (counter - 1)), 2);
+			gotoxy(2, 4 + counter - 1);
+            std::cout << calculate;
+            gotoxy(42 + i, 3);
+            color(LIGHT_GREEN, BLACK);
+            std::cout << tmp;
+            gotoxy(41 + i, 4);
+            std::cout << " ^";
 			color(WHITE, BLACK);
 			break;
 		case '*':
-			calculate = heap[counter - 2] * heap[counter - 1];
+			/*calculate = heap[counter - 2] * heap[counter - 1];
 			heap[counter - 2] = 0;
 			heap[counter - 1] = 0;
 			//gotoxy(3 + (2 * (counter - 2)), 2);
@@ -437,6 +579,31 @@ int calculateONP(std::string s, int speed = 500)
 			//gotoxy(3 + (2 * (counter - 1)), 2);
             gotoxy(2, 4 + counter - 1);
 			std::cout << calculate;
+            gotoxy(42 + i, 3);
+            color(LIGHT_GREEN, BLACK);
+            std::cout << tmp;
+            gotoxy(41 + i, 4);
+            std::cout << " ^";
+			color(WHITE, BLACK);*/
+            calculate = heap[counter - 2] * heap[counter - 1];
+			heap[counter - 2] = 0;
+			heap[counter - 1] = 0;
+            //(((2+2)+2)+2)+2=
+			//gotoxy(3 + (2 * (counter - 2)), 2);
+			gotoxy(2, 4 + counter - 2);
+            color(YELLOW, BLACK);
+			std::cout << "  ";
+			//gotoxy(3 + (2 * (counter - 1)), 2);
+			gotoxy(2, 4 + counter - 1);
+            std::cout << "  ";
+			counter -= 2;
+            heapPointer(counter);
+			heap[counter++] = calculate;
+            heapPointer(counter);
+            color(YELLOW, BLACK);
+			//gotoxy(3 + (2 * (counter - 1)), 2);
+			gotoxy(2, 4 + counter - 1);
+            std::cout << calculate;
             gotoxy(42 + i, 3);
             color(LIGHT_GREEN, BLACK);
             std::cout << tmp;
@@ -467,7 +634,7 @@ int calculateONP(std::string s, int speed = 500)
 				color(WHITE, BLACK);
 				return 0;
 			}
-			calculate = heap[counter - 2] / heap[counter - 1];
+			/*calculate = heap[counter - 2] / heap[counter - 1];
 			heap[counter - 2] = 0;
 			heap[counter - 1] = 0;
 			//gotoxy(3 + (2 * (counter - 2)), 2);
@@ -485,6 +652,31 @@ int calculateONP(std::string s, int speed = 500)
 			//gotoxy(3 + (2 * (counter - 1)), 2);
             gotoxy(2, 4 + counter - 1);
 			std::cout << calculate;
+            gotoxy(42 + i, 3);
+            color(LIGHT_GREEN, BLACK);
+            std::cout << tmp;
+            gotoxy(41 + i, 4);
+            std::cout << " ^";
+			color(WHITE, BLACK);*/
+            calculate = heap[counter - 2] / heap[counter - 1];
+			heap[counter - 2] = 0;
+			heap[counter - 1] = 0;
+            //(((2+2)+2)+2)+2=
+			//gotoxy(3 + (2 * (counter - 2)), 2);
+			gotoxy(2, 4 + counter - 2);
+            color(YELLOW, BLACK);
+			std::cout << "  ";
+			//gotoxy(3 + (2 * (counter - 1)), 2);
+			gotoxy(2, 4 + counter - 1);
+            std::cout << "  ";
+			counter -= 2;
+            heapPointer(counter);
+			heap[counter++] = calculate;
+            heapPointer(counter);
+            color(YELLOW, BLACK);
+			//gotoxy(3 + (2 * (counter - 1)), 2);
+			gotoxy(2, 4 + counter - 1);
+            std::cout << calculate;
             gotoxy(42 + i, 3);
             color(LIGHT_GREEN, BLACK);
             std::cout << tmp;
@@ -700,7 +892,7 @@ int main(int argc, char *argv[])
     tmp3 >> sp3;
 
 	system("cls");
-    system("pause > NUL");
+    //system("pause > NUL");
 
     color(GREEN, GREEN);
     for(int i = 1; i <= 28; i++)
